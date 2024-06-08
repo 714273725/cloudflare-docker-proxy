@@ -4,9 +4,7 @@ addEventListener("fetch", (event) => {
 });
 
 const routes = {
-  "docker-mirror-registry.outside.xiaotuizi.top": "https://registry-1.docker.io",
-  "docker-mirror-quay.outside.xiaotuizi.top": "https://quay.io",
-  "docker-mirror-gcr.outside.xiaotuizi.top": "https://gcr.io",
+  "docker-registry.geziya.cn": "https://registry-1.docker.io"
 };
 
 function routeByHosts(host) {
