@@ -39,22 +39,7 @@ async function handleRequest(request) {
     });
     if (resp.status === 200) {
     } else if (resp.status === 401) {
-      const headers = new Headers();
-      if (MODE == "debug") {
-        headers.set(
-          "Www-Authenticate",
-          `Bearer realm="${LOCAL_ADDRESS}/v2/auth",service="cloudflare-docker-proxy"`
-        );
-      } else {
-        headers.set(
-          "Www-Authenticate",
-          `Bearer realm="https://${url.hostname}/v2/auth",service="cloudflare-docker-proxy"`
-        );
-      }
-      return new Response(JSON.stringify({ message: "UNAUTHORIZED" }), {
-        status: 401,
-        headers: headers,
-      });
+      return responseUnauthorized(url)
     } else {
       return resp;
     }
@@ -83,7 +68,11 @@ async function handleRequest(request) {
     headers: request.headers,
     redirect: "follow",
   });
-  return await fetch(newReq);
+  const resp = await fetch(newReq);
+  if (resp.status == 401) {
+    return responseUnauthorized(url);
+  }
+  return resp;
 }
 
 function parseAuthenticate(authenticateStr) {
@@ -109,4 +98,23 @@ async function fetchToken(wwwAuthenticate, searchParams) {
     url.searchParams.set("scope", searchParams.get("scope"));
   }
   return await fetch(url, { method: "GET", headers: {} });
+}
+
+function responseUnauthorized(url) {
+  const headers = new(Headers);
+  if (MODE == "debug") {
+    headers.set(
+        "Www-Authenticate",
+        `Bearer realm="http://${url.host}/v2/auth",service="cloudflare-docker-proxy"`
+    );
+  } else {
+    headers.set(
+        "Www-Authenticate",
+        `Bearer realm="https://${url.hostname}/v2/auth",service="cloudflare-docker-proxy"`
+    );
+  }
+  return new Response(JSON.stringify({ message: "UNAUTHORIZED" }), {
+    status: 401,
+    headers: headers,
+  });
 }
